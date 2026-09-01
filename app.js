@@ -6,6 +6,13 @@ const QUALITY_COLORS = ['#F0A93E','#7BC96F','#5FA8D8','#E2685C','#C58EDB','#D8C1
 const CHART_TEXT = '#F3F1E6';
 const CHART_MUTED = '#93A896';
 const CHART_GRID = 'rgba(255,255,255,0.08)';
+
+// Chart.js's UMD build is tree-shakeable and does NOT auto-register chart
+// types/scales/plugins — without this, every new Chart(...) call below fails
+// silently (caught by the try/catch guards) and nothing ever renders.
+if(typeof Chart !== 'undefined' && Chart.registerables){
+  Chart.register(...Chart.registerables);
+}
 const DEFAULT_TEST_TYPES = [
   {id:'spenst', navn:'Spenst (vertikalhopp)', enhet:'cm'},
   {id:'hurtighet', navn:'Hurtighet (20m sprint)', enhet:'sek'},
