@@ -483,8 +483,11 @@ function renderDashboard(){
 
   // Player picker drives radar + quality trend + test trend
   const psel = document.getElementById('dash-player-select');
+  const prevValue = psel.value;
   psel.innerHTML = players.map(p=>`<option value="${p.id}">${p.navn}</option>`).join('') || '<option value="">Ingen spillere ennå</option>';
-  psel.onchange = renderPlayerCharts;
+  if(players.some(p=>p.id===prevValue)){ psel.value = prevValue; }
+  psel.removeEventListener('change', renderPlayerCharts);
+  psel.addEventListener('change', renderPlayerCharts);
   renderPlayerCharts();
 
   renderTeamQualityTrend();
@@ -499,6 +502,16 @@ function qualityAverages(playerId){
 
 function renderPlayerCharts(){
   const pid = document.getElementById('dash-player-select').value;
+  const name = pid ? playerName(pid) : '';
+  document.getElementById('radar-subtitle').textContent = pid
+    ? `${name} sammenlignet med lagsnittet, basert på alle registrerte vurderinger.`
+    : 'Velg en spiller over for å se sammenligning.';
+  document.getElementById('quality-trend-subtitle').textContent = pid
+    ? `${name}s snittkarakter pr. vurderte økt, én linje pr. kvalitet.`
+    : 'Velg en spiller over for å se utvikling.';
+  document.getElementById('test-subtitle').textContent = pid
+    ? `Fysiske testresultater for ${name} over tid.`
+    : 'Velg en spiller over for å se testresultater.';
   renderRadarChart(pid);
   renderPlayerQualityTrend(pid);
   renderPlayerTestChart(pid);
@@ -506,8 +519,11 @@ function renderPlayerCharts(){
 
 function renderRadarChart(pid){
   const ctx = document.getElementById('chart-kvaliteter');
+  const emptyMsg = document.getElementById('radar-empty');
   if(chartKvaliteter) chartKvaliteter.destroy();
   if(qualities.length===0){ return; }
+  const hasPlayerData = pid && ratings.some(r=>r.playerId===pid);
+  emptyMsg.classList.toggle('hidden', !pid || hasPlayerData);
   const datasets = [
     { label:'Lagsnitt', data: qualityAverages(null), backgroundColor:'rgba(240,169,62,0.15)', borderColor:'#F0A93E', pointBackgroundColor:'#F0A93E' },
   ];
@@ -527,12 +543,14 @@ function renderRadarChart(pid){
 
 function renderPlayerQualityTrend(pid){
   const ctx = document.getElementById('chart-spiller-kvalitet-tid');
+  const emptyMsg = document.getElementById('quality-trend-empty');
   if(chartSpillerKvalitetTid) chartSpillerKvalitetTid.destroy();
-  if(!pid || qualities.length===0){ return; }
+  if(!pid || qualities.length===0){ emptyMsg.classList.add('hidden'); return; }
   const rows = ratings.filter(r=>r.playerId===pid)
     .map(r=>({ ...r, session: sessions.find(s=>s.id===r.sessionId) }))
     .filter(r=>r.session)
     .sort((a,b)=> new Date(a.session.dato)-new Date(b.session.dato));
+  emptyMsg.classList.toggle('hidden', rows.length>0);
   if(rows.length===0){ return; }
   const labels = rows.map(r=>fmtDate(r.session.dato));
   const datasets = qualities.map((q,i)=>({
@@ -575,9 +593,12 @@ function renderTeamQualityTrend(){
 
 function renderPlayerTestChart(pid){
   const ctx = document.getElementById('chart-spiller-tester');
+  const emptyMsg = document.getElementById('test-empty');
   if(chartSpillerTester) chartSpillerTester.destroy();
-  if(!pid){ return; }
+  if(!pid){ emptyMsg.classList.add('hidden'); return; }
   const playerTests = tests.filter(t=>t.playerId===pid).sort((a,b)=> new Date(a.dato)-new Date(b.dato));
+  emptyMsg.classList.toggle('hidden', playerTests.length>0);
+  if(playerTests.length===0){ return; }
   const byType = {};
   playerTests.forEach(t=>{ (byType[t.typeId] = byType[t.typeId]||[]).push(t); });
   const datasets = Object.keys(byType).map((typeId,i)=>{

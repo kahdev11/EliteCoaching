@@ -211,19 +211,23 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
       <div class="grid cols-2">
         <div class="card">
           <h3 style="margin-top:0;">Kvaliteter — spiller vs. lagsnitt</h3>
-          <p class="small" style="margin-top:-8px;">Viser hvor spilleren ligger an sammenlignet med resten av troppen akkurat nå.</p>
+          <p class="small" style="margin-top:-8px;" id="radar-subtitle">Viser hvor spilleren ligger an sammenlignet med resten av troppen akkurat nå.</p>
           <div class="chart-wrap"><canvas id="chart-kvaliteter"></canvas></div>
+          <p class="small hidden" id="radar-empty">Ingen vurderinger registrert på denne spilleren ennå — gå til "Vurdering" for å legge inn karakterer.</p>
         </div>
         <div class="card">
           <h3 style="margin-top:0;">Kvalitetsutvikling — spiller over tid</h3>
-          <p class="small" style="margin-top:-8px;">Snittkarakter pr. vurderte økt, én linje pr. kvalitet.</p>
+          <p class="small" style="margin-top:-8px;" id="quality-trend-subtitle">Snittkarakter pr. vurderte økt, én linje pr. kvalitet.</p>
           <div class="chart-wrap"><canvas id="chart-spiller-kvalitet-tid"></canvas></div>
+          <p class="small hidden" id="quality-trend-empty">Ingen vurderinger registrert på denne spilleren ennå.</p>
         </div>
       </div>
 
       <div class="card">
         <h3 style="margin-top:0;">Testutvikling — fysiske tester</h3>
+        <p class="small" style="margin-top:-8px;" id="test-subtitle"></p>
         <div class="chart-wrap"><canvas id="chart-spiller-tester"></canvas></div>
+        <p class="small hidden" id="test-empty">Ingen tester registrert på denne spilleren ennå — gå til "Fysiske tester" for å legge inn resultater.</p>
       </div>
 
       <div class="card">
