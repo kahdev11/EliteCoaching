@@ -54,6 +54,7 @@ nav#sidenav button.tab.active{
 }
 nav#sidenav button.tab .ic{font-size:17px;width:20px;text-align:center;}
 
+.content-col{flex:1;min-width:0;display:flex;flex-direction:column;}
 main{flex:1;min-width:0;padding:32px 40px 100px 40px;max-width:1100px;}
 .view{display:none;}
 .view.active{display:block;}
@@ -136,11 +137,14 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bot
 
 nav#bottomnav{display:none;}
 @media(max-width:800px){
+  html,body{height:100%;margin:0;overflow:hidden;}
+  #app{height:100dvh;}
   nav#sidenav{display:none;}
-  main{padding:20px 16px 90px 16px;}
+  .content-col{height:100dvh;}
+  main{flex:1;min-width:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px 24px 16px;}
   nav#bottomnav{
-    display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--pitch-dark);
-    justify-content:space-around;padding:6px 0 max(6px,env(safe-area-inset-bottom)) 0;z-index:50;
+    display:flex;flex-shrink:0;background:var(--pitch-dark);
+    justify-content:space-around;padding:6px 0 max(6px,env(safe-area-inset-bottom)) 0;
   }
   nav#bottomnav button{background:none;border:none;color:rgba(247,245,240,0.6);font-size:10px;
     display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-family:'Inter';}
@@ -174,6 +178,7 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
     <button class="tab" data-view="oppstilling"><span class="ic">⚽</span> Oppstilling</button>
   </nav>
 
+  <div class="content-col">
   <main>
     <!-- DASHBOARD -->
     <section class="view active" id="view-dashboard">
@@ -273,17 +278,17 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
       </div>
     </section>
   </main>
+  <nav id="bottomnav">
+    <button class="active" data-view="dashboard"><span class="ic">▦</span>Utvikling</button>
+    <button data-view="spillere"><span class="ic">⛁</span>Spillere</button>
+    <button data-view="okter"><span class="ic">◷</span>Økter</button>
+    <button data-view="vurdering"><span class="ic">★</span>Vurder</button>
+    <button data-view="tester"><span class="ic">↥</span>Tester</button>
+    <button data-view="planer"><span class="ic">☑</span>Plan</button>
+    <button data-view="oppstilling"><span class="ic">⚽</span>Lag</button>
+  </nav>
+  </div>
 </div>
-
-<nav id="bottomnav">
-  <button class="active" data-view="dashboard"><span class="ic">▦</span>Utvikling</button>
-  <button data-view="spillere"><span class="ic">⛁</span>Spillere</button>
-  <button data-view="okter"><span class="ic">◷</span>Økter</button>
-  <button data-view="vurdering"><span class="ic">★</span>Vurder</button>
-  <button data-view="tester"><span class="ic">↥</span>Tester</button>
-  <button data-view="planer"><span class="ic">☑</span>Plan</button>
-  <button data-view="oppstilling"><span class="ic">⚽</span>Lag</button>
-</nav>
 
 <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal-content"></div></div>
 <div class="toast" id="toast"></div>
