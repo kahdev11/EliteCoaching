@@ -1,7 +1,11 @@
 /* ===================== DATA LAYER ===================== */
 const APP_VERSION = '2026-09-01.1';
 const STORE_KEYS = ['players','sessions','ratings','tests','plans','lineups'];
-const DEFAULT_QUALITIES = ['Teknikk','Fysisk','Taktisk forståelse','Innstilling','Samarbeid'];
+const DEFAULT_QUALITIES = ['Skudd','Pasning','Førstetouch','Bevegelse uten ball','Duellstyrke','Kommunikasjon','Holdning','Taktisk forståelse'];
+const QUALITY_COLORS = ['#F0A93E','#7BC96F','#5FA8D8','#E2685C','#C58EDB','#D8C15F','#5FD8C0','#D87FA0'];
+const CHART_TEXT = '#F3F1E6';
+const CHART_MUTED = '#93A896';
+const CHART_GRID = 'rgba(255,255,255,0.08)';
 const DEFAULT_TEST_TYPES = [
   {id:'spenst', navn:'Spenst (vertikalhopp)', enhet:'cm'},
   {id:'hurtighet', navn:'Hurtighet (20m sprint)', enhet:'sek'},
@@ -451,7 +455,7 @@ function renderSavedLineups(){
 function deleteLineup(id){ lineups = lineups.filter(x=>x.id!==id); save('lineups',lineups); renderSavedLineups(); }
 
 /* ===================== DASHBOARD ===================== */
-let chartOppmote, chartKvaliteter, chartSpillerTester;
+let chartOppmote, chartKvaliteter, chartSpillerTester, chartSpillerKvalitetTid, chartLagKvalitetTid;
 function renderDashboard(){
   const statsWrap = document.getElementById('dash-stats');
   const lastSessions = [...sessions].sort((a,b)=> new Date(b.dato)-new Date(a.dato)).slice(0,8);
@@ -471,54 +475,132 @@ function renderDashboard(){
   chartOppmote = new Chart(ctx1, {
     type:'bar',
     data:{ labels: ordered.map(s=>fmtDate(s.dato)),
-      datasets:[{label:'Oppmøtte', data: ordered.map(s=>Object.values(s.oppmote||{}).filter(Boolean).length), backgroundColor:'#5FA85D', borderRadius:4}]},
-    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{precision:0} } } }
+      datasets:[{label:'Oppmøtte', data: ordered.map(s=>Object.values(s.oppmote||{}).filter(Boolean).length), backgroundColor:'#7BC96F', borderRadius:4}]},
+    options:{ plugins:{legend:{display:false}}, scales:{
+      y:{ beginAtZero:true, ticks:{precision:0, color:CHART_MUTED}, grid:{color:CHART_GRID} },
+      x:{ ticks:{color:CHART_MUTED}, grid:{display:false} } } }
   });
 
-  // Kvaliteter radar
-  const ctx2 = document.getElementById('chart-kvaliteter');
-  if(chartKvaliteter) chartKvaliteter.destroy();
-  const qAverages = qualities.map(q=>{
-    const vals = ratings.map(r=>r.kvaliteter[q]).filter(v=>v>0);
-    return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
-  });
-  chartKvaliteter = new Chart(ctx2, {
-    type:'radar',
-    data:{ labels: qualities, datasets:[{label:'Snitt', data:qAverages, backgroundColor:'rgba(95,168,93,0.25)', borderColor:'#2D5F3F', pointBackgroundColor:'#2D5F3F'}]},
-    options:{ scales:{ r:{ min:0, max:5, ticks:{stepSize:1} } }, plugins:{legend:{display:false}} }
-  });
-
-  // Player picker + test trend
+  // Player picker drives radar + quality trend + test trend
   const psel = document.getElementById('dash-player-select');
-  psel.innerHTML = players.map(p=>`<option value="${p.id}">${p.navn}</option>`).join('') || '<option value="">Ingen spillere</option>';
-  psel.onchange = renderPlayerTestChart;
-  renderPlayerTestChart();
+  psel.innerHTML = players.map(p=>`<option value="${p.id}">${p.navn}</option>`).join('') || '<option value="">Ingen spillere ennå</option>';
+  psel.onchange = renderPlayerCharts;
+  renderPlayerCharts();
+
+  renderTeamQualityTrend();
 }
-function renderPlayerTestChart(){
+
+function qualityAverages(playerId){
+  return qualities.map(q=>{
+    const vals = ratings.filter(r=> playerId ? r.playerId===playerId : true).map(r=>r.kvaliteter[q]).filter(v=>v>0);
+    return vals.length ? +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2) : 0;
+  });
+}
+
+function renderPlayerCharts(){
   const pid = document.getElementById('dash-player-select').value;
+  renderRadarChart(pid);
+  renderPlayerQualityTrend(pid);
+  renderPlayerTestChart(pid);
+}
+
+function renderRadarChart(pid){
+  const ctx = document.getElementById('chart-kvaliteter');
+  if(chartKvaliteter) chartKvaliteter.destroy();
+  if(qualities.length===0){ return; }
+  const datasets = [
+    { label:'Lagsnitt', data: qualityAverages(null), backgroundColor:'rgba(240,169,62,0.15)', borderColor:'#F0A93E', pointBackgroundColor:'#F0A93E' },
+  ];
+  if(pid){
+    datasets.push({ label: playerName(pid), data: qualityAverages(pid), backgroundColor:'rgba(123,201,111,0.22)', borderColor:'#7BC96F', pointBackgroundColor:'#7BC96F' });
+  }
+  chartKvaliteter = new Chart(ctx, {
+    type:'radar',
+    data:{ labels: qualities, datasets },
+    options:{
+      scales:{ r:{ min:0, max:5, ticks:{ stepSize:1, color:CHART_MUTED, backdropColor:'transparent' },
+        grid:{color:CHART_GRID}, angleLines:{color:CHART_GRID}, pointLabels:{color:CHART_TEXT, font:{size:11}} } },
+      plugins:{ legend:{ position:'bottom', labels:{color:CHART_TEXT} } }
+    }
+  });
+}
+
+function renderPlayerQualityTrend(pid){
+  const ctx = document.getElementById('chart-spiller-kvalitet-tid');
+  if(chartSpillerKvalitetTid) chartSpillerKvalitetTid.destroy();
+  if(!pid || qualities.length===0){ return; }
+  const rows = ratings.filter(r=>r.playerId===pid)
+    .map(r=>({ ...r, session: sessions.find(s=>s.id===r.sessionId) }))
+    .filter(r=>r.session)
+    .sort((a,b)=> new Date(a.session.dato)-new Date(b.session.dato));
+  if(rows.length===0){ return; }
+  const labels = rows.map(r=>fmtDate(r.session.dato));
+  const datasets = qualities.map((q,i)=>({
+    label:q, data: rows.map(r=> r.kvaliteter[q] || null),
+    borderColor: QUALITY_COLORS[i%QUALITY_COLORS.length], backgroundColor:QUALITY_COLORS[i%QUALITY_COLORS.length],
+    spanGaps:true, tension:0.3, pointRadius:3,
+  }));
+  chartSpillerKvalitetTid = new Chart(ctx, {
+    type:'line', data:{labels,datasets},
+    options:{ scales:{
+      y:{ min:0, max:5, ticks:{stepSize:1, color:CHART_MUTED}, grid:{color:CHART_GRID} },
+      x:{ ticks:{color:CHART_MUTED}, grid:{display:false} } },
+      plugins:{ legend:{ position:'bottom', labels:{color:CHART_TEXT, boxWidth:12, font:{size:11}} } } }
+  });
+}
+
+function renderTeamQualityTrend(){
+  const ctx = document.getElementById('chart-lag-kvalitet-tid');
+  if(chartLagKvalitetTid) chartLagKvalitetTid.destroy();
+  const sessionsWithRatings = sessions.filter(s=> ratings.some(r=>r.sessionId===s.id)).sort((a,b)=> new Date(a.dato)-new Date(b.dato));
+  if(sessionsWithRatings.length===0 || qualities.length===0){ return; }
+  const labels = sessionsWithRatings.map(s=>fmtDate(s.dato));
+  const datasets = qualities.map((q,i)=>({
+    label:q,
+    data: sessionsWithRatings.map(s=>{
+      const vals = ratings.filter(r=>r.sessionId===s.id).map(r=>r.kvaliteter[q]).filter(v=>v>0);
+      return vals.length ? +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2) : null;
+    }),
+    borderColor: QUALITY_COLORS[i%QUALITY_COLORS.length], backgroundColor:QUALITY_COLORS[i%QUALITY_COLORS.length],
+    spanGaps:true, tension:0.3, pointRadius:3,
+  }));
+  chartLagKvalitetTid = new Chart(ctx, {
+    type:'line', data:{labels,datasets},
+    options:{ scales:{
+      y:{ min:0, max:5, ticks:{stepSize:1, color:CHART_MUTED}, grid:{color:CHART_GRID} },
+      x:{ ticks:{color:CHART_MUTED}, grid:{display:false} } },
+      plugins:{ legend:{ position:'bottom', labels:{color:CHART_TEXT, boxWidth:12, font:{size:11}} } } }
+  });
+}
+
+function renderPlayerTestChart(pid){
   const ctx = document.getElementById('chart-spiller-tester');
   if(chartSpillerTester) chartSpillerTester.destroy();
   if(!pid){ return; }
   const playerTests = tests.filter(t=>t.playerId===pid).sort((a,b)=> new Date(a.dato)-new Date(b.dato));
   const byType = {};
   playerTests.forEach(t=>{ (byType[t.typeId] = byType[t.typeId]||[]).push(t); });
-  const colors = ['#2D5F3F','#E8A33D','#5FA85D','#C1554B','#7A8B7D','#3D6FA8'];
   const datasets = Object.keys(byType).map((typeId,i)=>{
     const tt = testTypes.find(x=>x.id===typeId) || {navn:typeId};
-    return { label: tt.navn, data: byType[typeId].map(t=>({x:t.dato, y:t.verdi})), borderColor: colors[i%colors.length], backgroundColor:colors[i%colors.length], tension:0.25 };
+    return { label: tt.navn, data: byType[typeId].map(t=>({x:t.dato, y:t.verdi})),
+      borderColor: QUALITY_COLORS[i%QUALITY_COLORS.length], backgroundColor:QUALITY_COLORS[i%QUALITY_COLORS.length], tension:0.25, pointRadius:3 };
   });
   chartSpillerTester = new Chart(ctx, {
     type:'line',
     data:{ datasets },
-    options:{ parsing:false, scales:{ x:{ type:'time', time:{unit:'month'}, ticks:{source:'auto'} } },
-      plugins:{ legend:{ position:'bottom' } } }
+    options:{ parsing:false, scales:{
+      x:{ type:'time', time:{unit:'month'}, ticks:{source:'auto', color:CHART_MUTED}, grid:{color:CHART_GRID} },
+      y:{ ticks:{color:CHART_MUTED}, grid:{color:CHART_GRID} } },
+      plugins:{ legend:{ position:'bottom', labels:{color:CHART_TEXT} } } }
   });
 }
+
 
 /* ===================== INNSTILLINGER / BACKUP / OPPDATERING ===================== */
 function renderSettings(){
   const label = `Versjon ${APP_VERSION}`;
   document.getElementById('version-label-main').textContent = label;
+  renderQualitiesSettings();
 }
 function allDataKeys(){
   return [...STORE_KEYS, 'testTypes', 'qualities'];
@@ -551,6 +633,131 @@ function importBackupFile(file){
   };
   reader.readAsText(file);
 }
+
+function renderQualitiesSettings(){
+  const wrap = document.getElementById('qualities-list');
+  if(qualities.length===0){ wrap.innerHTML = `<p class="small">Ingen kvaliteter lagt til ennå.</p>`; return; }
+  wrap.innerHTML = qualities.map(q=>`
+    <span class="quality-chip">${q}
+      <button onclick="removeQuality('${q.replace(/'/g,"\\'")}')" title="Fjern">✕</button>
+    </span>`).join('');
+}
+function addQualityFromInput(){
+  const input = document.getElementById('new-quality-input');
+  const val = input.value.trim();
+  if(!val) return;
+  if(qualities.includes(val)){ toast('Finnes allerede'); return; }
+  qualities.push(val); save('qualities', qualities);
+  input.value=''; renderQualitiesSettings(); toast('Lagt til');
+}
+function removeQuality(q){
+  if(!confirm(`Fjerne "${q}"? Tidligere vurderinger beholdes i historikken, men kvaliteten vises ikke lenger i nye vurderinger.`)) return;
+  qualities = qualities.filter(x=>x!==q); save('qualities', qualities); renderQualitiesSettings();
+}
+
+/* ---- Demo data ---- */
+function generateDemoData(){
+  if(!confirm('Dette legger til et fiktivt demo-lag med spillere, økter, vurderinger og tester, slik at du kan se hvordan grafene ser ut ferdig utfylt. Du kan fjerne det igjen når som helst uten at dine egne data påvirkes. Fortsette?')) return;
+
+  const demoQualities = ['Skudd','Pasning','Førstetouch','Bevegelse uten ball','Duellstyrke','Kommunikasjon','Holdning','Taktisk forståelse'];
+  demoQualities.forEach(q=>{ if(!qualities.includes(q)) qualities.push(q); });
+  save('qualities', qualities);
+
+  const demoNames = [
+    {navn:'Emma Haugen', posisjon:'Keeper', fodselsar:2012},
+    {navn:'Olav Berg', posisjon:'Forsvar', fodselsar:2012},
+    {navn:'Sofie Dahl', posisjon:'Forsvar', fodselsar:2012},
+    {navn:'Noah Kristiansen', posisjon:'Forsvar', fodselsar:2013},
+    {navn:'Ingrid Solheim', posisjon:'Forsvar', fodselsar:2012},
+    {navn:'Markus Vik', posisjon:'Midtbane', fodselsar:2012},
+    {navn:'Thea Nygård', posisjon:'Midtbane', fodselsar:2013},
+    {navn:'Jonas Strand', posisjon:'Midtbane', fodselsar:2012},
+    {navn:'Maja Lien', posisjon:'Midtbane', fodselsar:2012},
+    {navn:'Sander Moe', posisjon:'Angrep', fodselsar:2012},
+    {navn:'Live Fossen', posisjon:'Angrep', fodselsar:2013},
+    {navn:'Kasper Rud', posisjon:'Angrep', fodselsar:2012},
+  ];
+  const demoPlayers = demoNames.map(p=>({ id:uid(), demo:true, notat:'', ...p }));
+  players.push(...demoPlayers);
+
+  const today = new Date();
+  const rawSessions = [];
+  const numWeeks = 9;
+  for(let w=numWeeks; w>=0; w--){
+    const base = new Date(today); base.setDate(base.getDate() - w*7);
+    const tue = new Date(base); tue.setDate(tue.getDate() - ((tue.getDay()+5)%7));
+    rawSessions.push({date:new Date(tue), type:'trening', tittel:'Trening'});
+    if(w%2===0){
+      const sat = new Date(base); sat.setDate(sat.getDate() + ((6-sat.getDay()+7)%7));
+      const motstander = ['Nord IL','Sør FK','Bygdø BK','Fjell United'][w%4];
+      rawSessions.push({date:new Date(sat), type:'kamp', tittel:'Kamp mot '+motstander});
+    }
+  }
+  rawSessions.sort((a,b)=>a.date-b.date);
+  const demoSessions = rawSessions.map((s,idx)=>{
+    const oppmote = {};
+    demoPlayers.forEach(p=>{ oppmote[p.id] = Math.random() > 0.15; });
+    return { id:uid(), demo:true, type:s.type, dato:s.date.toISOString().slice(0,10), tittel:s.tittel, oppmote };
+  });
+  sessions.push(...demoSessions);
+
+  const playerBaseline = {};
+  demoPlayers.forEach(p=>{ playerBaseline[p.id] = 2 + Math.random()*1.2; });
+  const total = demoSessions.length;
+  demoSessions.forEach((s, idx)=>{
+    const progress = idx/(total-1||1);
+    demoPlayers.forEach(p=>{
+      if(!s.oppmote[p.id]) return;
+      if(Math.random() > 0.7) return;
+      const base = playerBaseline[p.id] + progress*1.3;
+      const kvaliteter = {};
+      demoQualities.forEach(q=>{
+        kvaliteter[q] = Math.round(Math.min(5, Math.max(1, base + (Math.random()-0.5)*1.2)));
+      });
+      ratings.push({id:uid(), demo:true, sessionId:s.id, playerId:p.id, kvaliteter, kommentar:''});
+    });
+  });
+
+  const testDates = [demoSessions[0].dato, demoSessions[Math.floor(total/2)].dato, demoSessions[total-1].dato];
+  demoPlayers.forEach(p=>{
+    const spenstBase = 28 + Math.random()*10;
+    const hurtighetBase = 3.6 + Math.random()*0.5;
+    const skuddBase = 55 + Math.random()*15;
+    const utholdenhetBase = 800 + Math.random()*400;
+    testDates.forEach((dato, i)=>{
+      tests.push({id:uid(), demo:true, playerId:p.id, typeId:'spenst', verdi: Math.round(spenstBase + i*2.2), dato});
+      tests.push({id:uid(), demo:true, playerId:p.id, typeId:'hurtighet', verdi: +(hurtighetBase - i*0.12).toFixed(2), dato});
+      tests.push({id:uid(), demo:true, playerId:p.id, typeId:'skudd', verdi: Math.round(skuddBase + i*3), dato});
+      tests.push({id:uid(), demo:true, playerId:p.id, typeId:'utholdenhet', verdi: Math.round(utholdenhetBase + i*120), dato});
+    });
+  });
+
+  plans.push({id:uid(), demo:true, tittel:'Trening tirsdag – avslutninger', dato:new Date().toISOString().slice(0,10), punkter:[
+    {tekst:'Oppvarming 15 min', done:true},
+    {tekst:'Pasningsøvelser i par', done:true},
+    {tekst:'4v4 smålagsspill', done:false},
+    {tekst:'Avslutninger fra kant', done:false},
+    {tekst:'Nedjogg og tøying', done:false},
+  ]});
+
+  persistAll();
+  toast('Demo-data lagt til');
+  switchView('dashboard');
+}
+function clearDemoData(){
+  if(!confirm('Fjerne alt demo-data? Dine egne registrerte spillere, økter, vurderinger og tester påvirkes ikke.')) return;
+  players = players.filter(x=>!x.demo);
+  sessions = sessions.filter(x=>!x.demo);
+  ratings = ratings.filter(x=>!x.demo);
+  tests = tests.filter(x=>!x.demo);
+  plans = plans.filter(x=>!x.demo);
+  lineups = lineups.filter(x=>!x.demo);
+  persistAll();
+  toast('Demo-data fjernet');
+  switchView('dashboard');
+}
+document.getElementById('loadDemoBtn').addEventListener('click', generateDemoData);
+document.getElementById('clearDemoBtn').addEventListener('click', clearDemoData);
 document.getElementById('exportBtn').addEventListener('click', exportAllData);
 document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', e=>{

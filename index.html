@@ -169,6 +169,12 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
 .small{font-size:12px;color:var(--muted);}
 .flex-between{display:flex;justify-content:space-between;align-items:center;}
 .hidden{display:none;}
+.quality-chip{
+  display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:20px;padding:5px 6px 5px 12px;font-size:13px;margin:0 6px 6px 0;
+}
+.quality-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 6px;}
+.quality-chip button:hover{color:var(--danger);}
 </style>
 </head>
 <body>
@@ -196,20 +202,39 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
         <div><h1>Utvikling</h1><p>Oversikt over lag og spillerutvikling</p></div>
       </div>
       <div class="grid cols-4" id="dash-stats"></div>
-      <div class="grid cols-2" style="margin-top:16px;">
+
+      <div class="card" style="margin-top:16px;">
+        <label>Velg spiller for detaljert utvikling</label>
+        <select class="player-picker" id="dash-player-select" style="margin-bottom:0;"></select>
+      </div>
+
+      <div class="grid cols-2">
         <div class="card">
-          <h3 style="margin-top:0;">Oppmøte siste 8 økter</h3>
-          <div class="chart-wrap"><canvas id="chart-oppmote"></canvas></div>
-        </div>
-        <div class="card">
-          <h3 style="margin-top:0;">Snittvurdering pr. kvalitet (lag)</h3>
+          <h3 style="margin-top:0;">Kvaliteter — spiller vs. lagsnitt</h3>
+          <p class="small" style="margin-top:-8px;">Viser hvor spilleren ligger an sammenlignet med resten av troppen akkurat nå.</p>
           <div class="chart-wrap"><canvas id="chart-kvaliteter"></canvas></div>
         </div>
+        <div class="card">
+          <h3 style="margin-top:0;">Kvalitetsutvikling — spiller over tid</h3>
+          <p class="small" style="margin-top:-8px;">Snittkarakter pr. vurderte økt, én linje pr. kvalitet.</p>
+          <div class="chart-wrap"><canvas id="chart-spiller-kvalitet-tid"></canvas></div>
+        </div>
       </div>
+
       <div class="card">
-        <div class="flex-between"><h3 style="margin:0;">Testutvikling — velg spiller</h3></div>
-        <select class="player-picker" id="dash-player-select"></select>
+        <h3 style="margin-top:0;">Testutvikling — fysiske tester</h3>
         <div class="chart-wrap"><canvas id="chart-spiller-tester"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Lagets utvikling pr. kvalitet over tid</h3>
+        <p class="small" style="margin-top:-8px;">Lagsnitt pr. vurderte økt — bruk denne for å se hva dere bør prioritere på trening.</p>
+        <div class="chart-wrap"><canvas id="chart-lag-kvalitet-tid"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Oppmøte siste 8 økter</h3>
+        <div class="chart-wrap"><canvas id="chart-oppmote"></canvas></div>
       </div>
     </section>
 
@@ -292,6 +317,21 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
     <section class="view" id="view-innstillinger">
       <div class="view-header">
         <div><h1>Innstillinger</h1><p>Versjon, backup og oppdatering</p></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">Vurderingskvaliteter</h3>
+        <p class="small" style="margin-bottom:14px;">Dette er kvalitetene dere vurderer spillerne på under "Vurdering". Legg til eller fjern etter behov — f.eks. skudd, pasningskvalitet, bevegelse, kommunikasjon, holdning.</p>
+        <div id="qualities-list" style="margin-bottom:12px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="new-quality-input" placeholder="Ny kvalitet, f.eks. Skuddteknikk" style="flex:1;" onkeydown="if(event.key==='Enter') addQualityFromInput()">
+          <button class="ghost" onclick="addQualityFromInput()">Legg til</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">Demo-data</h3>
+        <p class="small" style="margin-bottom:14px;">Fyll appen med et fiktivt lag, økter, vurderinger og tester — nyttig for å se hvordan grafene ser ut når data er fylt ut. Demo-data er merket og kan fjernes igjen uten å røre dine egne data.</p>
+        <button class="ghost block" id="loadDemoBtn">Last inn demo-data</button>
+        <button class="ghost block" id="clearDemoBtn">Fjern demo-data</button>
       </div>
       <div class="card">
         <h3 style="margin-top:0;">App-versjon</h3>
