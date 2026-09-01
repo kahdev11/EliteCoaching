@@ -11,8 +11,8 @@
 <meta name="apple-mobile-web-app-title" content="Lagutvikling">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="chart.umd.js"></script>
+<script src="chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
 :root{
   --bg:#13241a;
@@ -169,6 +169,14 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
 .small{font-size:12px;color:var(--muted);}
 .flex-between{display:flex;justify-content:space-between;align-items:center;}
 .hidden{display:none;}
+.more-link{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:none;
+  color:var(--text);padding:16px 20px;font-family:'Inter',sans-serif;font-size:15px;font-weight:500;
+  cursor:pointer;border-bottom:1px solid var(--border);
+}
+.more-link:last-child{border-bottom:none;}
+.more-link:hover{background:rgba(255,255,255,0.04);}
+.more-link .ic{font-size:18px;width:22px;text-align:center;}
 .quality-chip{
   display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);
   border-radius:20px;padding:5px 6px 5px 12px;font-size:13px;margin:0 6px 6px 0;
@@ -317,6 +325,19 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
       </div>
     </section>
 
+    <!-- MER (mobil-oversikt) -->
+    <section class="view" id="view-mer">
+      <div class="view-header">
+        <div><h1>Mer</h1><p>Resten av verktøyene</p></div>
+      </div>
+      <div class="card" style="padding:0;">
+        <button class="more-link" data-view="tester"><span class="ic">↥</span> Fysiske tester</button>
+        <button class="more-link" data-view="planer"><span class="ic">☑</span> Øktplan</button>
+        <button class="more-link" data-view="oppstilling"><span class="ic">⚽</span> Oppstilling</button>
+        <button class="more-link" data-view="innstillinger"><span class="ic">⚙</span> Innstillinger</button>
+      </div>
+    </section>
+
     <!-- INNSTILLINGER -->
     <section class="view" id="view-innstillinger">
       <div class="view-header">
@@ -360,10 +381,7 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
     <button data-view="spillere"><span class="ic">⛁</span>Spillere</button>
     <button data-view="okter"><span class="ic">◷</span>Økter</button>
     <button data-view="vurdering"><span class="ic">★</span>Vurder</button>
-    <button data-view="tester"><span class="ic">↥</span>Tester</button>
-    <button data-view="planer"><span class="ic">☑</span>Plan</button>
-    <button data-view="oppstilling"><span class="ic">⚽</span>Lag</button>
-    <button data-view="innstillinger"><span class="ic">⚙</span>Mer</button>
+    <button data-view="mer"><span class="ic">☰</span>Mer</button>
   </nav>
   </div>
 </div>

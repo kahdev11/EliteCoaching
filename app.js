@@ -1,5 +1,5 @@
 /* ===================== DATA LAYER ===================== */
-const APP_VERSION = '2026-09-01.1';
+const APP_VERSION = '2026-09-01.2';
 const STORE_KEYS = ['players','sessions','ratings','tests','plans','lineups'];
 const DEFAULT_QUALITIES = ['Skudd','Pasning','Førstetouch','Bevegelse uten ball','Duellstyrke','Kommunikasjon','Holdning','Taktisk forståelse'];
 const QUALITY_COLORS = ['#F0A93E','#7BC96F','#5FA8D8','#E2685C','#C58EDB','#D8C15F','#5FD8C0','#D87FA0'];
@@ -72,11 +72,16 @@ function persistAll(){
 }
 
 /* ===================== NAV ===================== */
+const MER_GROUP = ['tester','planer','oppstilling','innstillinger','mer'];
 function switchView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  document.querySelectorAll('#sidenav .tab, #bottomnav button').forEach(b=>{
+  document.querySelectorAll('#sidenav .tab').forEach(b=>{
     b.classList.toggle('active', b.dataset.view===v);
+  });
+  document.querySelectorAll('#bottomnav button').forEach(b=>{
+    const isMerBtn = b.dataset.view==='mer';
+    b.classList.toggle('active', isMerBtn ? MER_GROUP.includes(v) : b.dataset.view===v);
   });
   if(v==='dashboard') renderDashboard();
   if(v==='spillere') renderPlayers();
@@ -87,7 +92,7 @@ function switchView(v){
   if(v==='oppstilling') renderLineupView();
   if(v==='innstillinger') renderSettings();
 }
-document.querySelectorAll('#sidenav .tab, #bottomnav button').forEach(b=>{
+document.querySelectorAll('#sidenav .tab, #bottomnav button, .more-link').forEach(b=>{
   b.addEventListener('click', ()=>switchView(b.dataset.view));
 });
 
