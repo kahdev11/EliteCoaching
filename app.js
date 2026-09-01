@@ -94,6 +94,24 @@ function openModal(html){
   document.getElementById('modal-content').innerHTML = html;
   document.getElementById('modal-backdrop').classList.add('active');
 }
+// Custom in-app confirm dialog. Native window.confirm() is unreliable in
+// standalone/home-screen PWA mode on iOS (can silently auto-dismiss),
+// so all destructive/important actions route through this instead.
+function customConfirm(message, onYes){
+  openModal(`
+    <h2>Bekreft</h2>
+    <p style="margin-bottom:20px;line-height:1.5;">${message}</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="ghost" id="confirm-no-btn">Avbryt</button>
+      <button class="primary" id="confirm-yes-btn">Fortsett</button>
+    </div>
+  `);
+  document.getElementById('confirm-no-btn').addEventListener('click', closeModal);
+  document.getElementById('confirm-yes-btn').addEventListener('click', ()=>{
+    closeModal();
+    onYes();
+  });
+}
 document.getElementById('modal-backdrop').addEventListener('click', e=>{
   if(e.target.id==='modal-backdrop') closeModal();
 });
@@ -157,8 +175,9 @@ function savePlayer(id){
   save('players',players); closeModal(); renderPlayers(); toast('Lagret');
 }
 function deletePlayer(id){
-  if(!confirm('Slette spilleren? Dette fjerner ikke historiske vurderinger/tester.')) return;
-  players = players.filter(x=>x.id!==id); save('players',players); renderPlayers();
+  customConfirm('Slette spilleren? Dette fjerner ikke historiske vurderinger/tester.', ()=>{
+    players = players.filter(x=>x.id!==id); save('players',players); renderPlayers();
+  });
 }
 
 /* ===================== ØKTER & KAMPER ===================== */
@@ -226,10 +245,11 @@ function saveSession(id){
   save('sessions',sessions); closeModal(); renderSessions(); toast('Lagret');
 }
 function deleteSession(id){
-  if(!confirm('Slette denne økten? Vurderinger knyttet til den blir også slettet.')) return;
-  sessions = sessions.filter(x=>x.id!==id);
-  ratings = ratings.filter(r=>r.sessionId!==id);
-  save('sessions',sessions); save('ratings',ratings); renderSessions();
+  customConfirm('Slette denne økten? Vurderinger knyttet til den blir også slettet.', ()=>{
+    sessions = sessions.filter(x=>x.id!==id);
+    ratings = ratings.filter(r=>r.sessionId!==id);
+    save('sessions',sessions); save('ratings',ratings); renderSessions();
+  });
 }
 
 /* ===================== VURDERING ===================== */
@@ -672,14 +692,18 @@ function addQualityFromInput(){
   input.value=''; renderQualitiesSettings(); toast('Lagt til');
 }
 function removeQuality(q){
-  if(!confirm(`Fjerne "${q}"? Tidligere vurderinger beholdes i historikken, men kvaliteten vises ikke lenger i nye vurderinger.`)) return;
-  qualities = qualities.filter(x=>x!==q); save('qualities', qualities); renderQualitiesSettings();
+  customConfirm(`Fjerne "${q}"? Tidligere vurderinger beholdes i historikken, men kvaliteten vises ikke lenger i nye vurderinger.`, ()=>{
+    qualities = qualities.filter(x=>x!==q); save('qualities', qualities); renderQualitiesSettings();
+  });
 }
 
 /* ---- Demo data ---- */
 function generateDemoData(){
-  if(!confirm('Dette legger til et fiktivt demo-lag med spillere, økter, vurderinger og tester, slik at du kan se hvordan grafene ser ut ferdig utfylt. Du kan fjerne det igjen når som helst uten at dine egne data påvirkes. Fortsette?')) return;
-
+  customConfirm('Dette legger til et fiktivt demo-lag med spillere, økter, vurderinger og tester, slik at du kan se hvordan grafene ser ut ferdig utfylt. Du kan fjerne det igjen når som helst uten at dine egne data påvirkes. Fortsette?', ()=>{
+    doGenerateDemoData();
+  });
+}
+function doGenerateDemoData(){
   const demoQualities = ['Skudd','Pasning','Førstetouch','Bevegelse uten ball','Duellstyrke','Kommunikasjon','Holdning','Taktisk forståelse'];
   demoQualities.forEach(q=>{ if(!qualities.includes(q)) qualities.push(q); });
   save('qualities', qualities);
@@ -766,16 +790,17 @@ function generateDemoData(){
   switchView('dashboard');
 }
 function clearDemoData(){
-  if(!confirm('Fjerne alt demo-data? Dine egne registrerte spillere, økter, vurderinger og tester påvirkes ikke.')) return;
-  players = players.filter(x=>!x.demo);
-  sessions = sessions.filter(x=>!x.demo);
-  ratings = ratings.filter(x=>!x.demo);
-  tests = tests.filter(x=>!x.demo);
-  plans = plans.filter(x=>!x.demo);
-  lineups = lineups.filter(x=>!x.demo);
-  persistAll();
-  toast('Demo-data fjernet');
-  switchView('dashboard');
+  customConfirm('Fjerne alt demo-data? Dine egne registrerte spillere, økter, vurderinger og tester påvirkes ikke.', ()=>{
+    players = players.filter(x=>!x.demo);
+    sessions = sessions.filter(x=>!x.demo);
+    ratings = ratings.filter(x=>!x.demo);
+    tests = tests.filter(x=>!x.demo);
+    plans = plans.filter(x=>!x.demo);
+    lineups = lineups.filter(x=>!x.demo);
+    persistAll();
+    toast('Demo-data fjernet');
+    switchView('dashboard');
+  });
 }
 document.getElementById('loadDemoBtn').addEventListener('click', generateDemoData);
 document.getElementById('clearDemoBtn').addEventListener('click', clearDemoData);
