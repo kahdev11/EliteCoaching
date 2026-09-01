@@ -1,0 +1,9 @@
+{
+  "name": "Lagutvikling",
+  "short_name": "Lagutvikling",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F7F5F0",
+  "theme_color": "#2D5F3F",
+  "icons": []
+}

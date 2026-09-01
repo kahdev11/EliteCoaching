@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lagutvikling</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2D5F3F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+:root{
+  --pitch:#2D5F3F;
+  --pitch-dark:#1E4530;
+  --fresh:#5FA85D;
+  --chalk:#F7F5F0;
+  --amber:#E8A33D;
+  --ink:#1A2419;
+  --muted:#7A8B7D;
+  --line-white:#E4E0D6;
+  --card:#FFFFFF;
+  --danger:#C1554B;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Inter',sans-serif;background:var(--chalk);color:var(--ink);}
+h1,h2,h3,.num{font-family:'Oswald',sans-serif;}
+.num{font-variant-numeric:tabular-nums;}
+
+/* App shell */
+#app{display:flex;min-height:100vh;}
+nav#sidenav{
+  width:220px;background:var(--pitch-dark);color:var(--chalk);
+  padding:24px 0;flex-shrink:0;display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+nav#sidenav .brand{
+  font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;
+  padding:0 20px 24px 20px;letter-spacing:0.5px;color:var(--chalk);
+  border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:12px;
+}
+nav#sidenav .brand span{color:var(--fresh);}
+nav#sidenav button.tab{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:none;border:none;color:rgba(247,245,240,0.75);
+  padding:12px 20px;font-family:'Inter',sans-serif;font-size:15px;font-weight:500;
+  cursor:pointer;border-left:3px solid transparent;transition:background .15s;
+}
+nav#sidenav button.tab:hover{background:rgba(255,255,255,0.06);}
+nav#sidenav button.tab.active{
+  background:rgba(95,168,93,0.15);color:#fff;border-left-color:var(--fresh);
+}
+nav#sidenav button.tab .ic{font-size:17px;width:20px;text-align:center;}
+
+main{flex:1;min-width:0;padding:32px 40px 100px 40px;max-width:1100px;}
+.view{display:none;}
+.view.active{display:block;}
+.view-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.view-header h1{font-size:28px;margin:0;font-weight:600;}
+.view-header p{margin:4px 0 0 0;color:var(--muted);font-size:14px;}
+
+button.primary{
+  background:var(--pitch);color:#fff;border:none;padding:10px 18px;border-radius:var(--radius);
+  font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;
+}
+button.primary:hover{background:var(--pitch-dark);}
+button.ghost{
+  background:none;border:1px solid var(--line-white);color:var(--ink);
+  padding:9px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;
+}
+button.ghost:hover{border-color:var(--pitch);}
+button.icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 8px;}
+button.icon-btn:hover{color:var(--danger);}
+
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--line-white);padding:20px;margin-bottom:16px;}
+.grid{display:grid;gap:16px;}
+.grid.cols-2{grid-template-columns:1fr 1fr;}
+.grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.grid.cols-4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}}
+
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;text-transform:none;padding:8px 10px;border-bottom:2px solid var(--line-white);}
+td{padding:10px 10px;border-bottom:1px solid var(--line-white);}
+tr:last-child td{border-bottom:none;}
+
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:9px 12px;border:1px solid var(--line-white);border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--ink);
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--fresh);outline-offset:1px;border-color:var(--fresh);}
+label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;}
+.field{margin-bottom:14px;}
+
+.stat-box{background:var(--card);border-radius:var(--radius);border:1px solid var(--line-white);padding:18px;}
+.stat-box .val{font-size:32px;font-weight:600;color:var(--pitch);}
+.stat-box .lbl{font-size:13px;color:var(--muted);margin-top:2px;}
+
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+.pill.trening{background:#E8F1E6;color:var(--pitch);}
+.pill.kamp{background:#FBEBDD;color:#A85F1E;}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state h3{color:var(--ink);margin-bottom:6px;}
+
+.modal-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(26,36,25,0.5);
+  align-items:center;justify-content:center;z-index:100;padding:20px;
+}
+.modal-backdrop.active{display:flex;}
+.modal{background:#fff;border-radius:14px;padding:28px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal h2{margin:0 0 18px 0;font-size:20px;}
+
+.star-rate{display:flex;gap:4px;}
+.star-rate button{background:none;border:none;font-size:22px;cursor:pointer;color:var(--line-white);padding:2px;}
+.star-rate button.on{color:var(--amber);}
+
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-white);}
+.checklist-item:last-child{border-bottom:none;}
+.checklist-item input[type=checkbox]{width:18px;height:18px;flex-shrink:0;}
+.checklist-item span{flex:1;font-size:14px;}
+.checklist-item.done span{text-decoration:line-through;color:var(--muted);}
+
+.pitch-wrap{background:var(--pitch);border-radius:14px;padding:20px;position:relative;aspect-ratio:3/4;max-width:420px;margin:0 auto;
+  background-image:repeating-linear-gradient(180deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 40px, transparent 40px, transparent 80px);
+}
+.pitch-wrap::before{content:'';position:absolute;left:50%;top:50%;width:70%;height:1px;background:rgba(255,255,255,0.3);transform:translate(-50%,-50%);}
+.pitch-wrap::after{content:'';position:absolute;left:50%;top:50%;width:70px;height:70px;border:1px solid rgba(255,255,255,0.3);border-radius:50%;transform:translate(-50%,-50%);}
+.pos-slot{
+  position:absolute;transform:translate(-50%,-50%);width:56px;text-align:center;
+}
+.pos-slot select{width:100%;font-size:11px;padding:4px 2px;border-radius:6px;background:rgba(255,255,255,0.92);}
+.pos-slot .tag{color:#fff;font-size:10px;font-weight:600;margin-bottom:2px;text-shadow:0 1px 2px rgba(0,0,0,0.4);}
+
+nav#bottomnav{display:none;}
+@media(max-width:800px){
+  nav#sidenav{display:none;}
+  main{padding:20px 16px 90px 16px;}
+  nav#bottomnav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--pitch-dark);
+    justify-content:space-around;padding:6px 0 max(6px,env(safe-area-inset-bottom)) 0;z-index:50;
+  }
+  nav#bottomnav button{background:none;border:none;color:rgba(247,245,240,0.6);font-size:10px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-family:'Inter';}
+  nav#bottomnav button.active{color:var(--fresh);}
+  nav#bottomnav button .ic{font-size:18px;}
+  .grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}
+}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:10px 20px;border-radius:30px;font-size:14px;
+  opacity:0;transition:all .25s;pointer-events:none;z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.chart-wrap{position:relative;height:220px;}
+select.player-picker{margin-bottom:16px;max-width:280px;}
+.small{font-size:12px;color:var(--muted);}
+.flex-between{display:flex;justify-content:space-between;align-items:center;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <nav id="sidenav">
+    <div class="brand">Lag<span>utvikling</span></div>
+    <button class="tab active" data-view="dashboard"><span class="ic">▦</span> Utvikling</button>
+    <button class="tab" data-view="spillere"><span class="ic">⛁</span> Spillere</button>
+    <button class="tab" data-view="okter"><span class="ic">◷</span> Økter &amp; kamper</button>
+    <button class="tab" data-view="vurdering"><span class="ic">★</span> Vurdering</button>
+    <button class="tab" data-view="tester"><span class="ic">↥</span> Fysiske tester</button>
+    <button class="tab" data-view="planer"><span class="ic">☑</span> Øktplan</button>
+    <button class="tab" data-view="oppstilling"><span class="ic">⚽</span> Oppstilling</button>
+  </nav>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="view-header">
+        <div><h1>Utvikling</h1><p>Oversikt over lag og spillerutvikling</p></div>
+      </div>
+      <div class="grid cols-4" id="dash-stats"></div>
+      <div class="grid cols-2" style="margin-top:16px;">
+        <div class="card">
+          <h3 style="margin-top:0;">Oppmøte siste 8 økter</h3>
+          <div class="chart-wrap"><canvas id="chart-oppmote"></canvas></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0;">Snittvurdering pr. kvalitet (lag)</h3>
+          <div class="chart-wrap"><canvas id="chart-kvaliteter"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex-between"><h3 style="margin:0;">Testutvikling — velg spiller</h3></div>
+        <select class="player-picker" id="dash-player-select"></select>
+        <div class="chart-wrap"><canvas id="chart-spiller-tester"></canvas></div>
+      </div>
+    </section>
+
+    <!-- SPILLERE -->
+    <section class="view" id="view-spillere">
+      <div class="view-header">
+        <div><h1>Spillere</h1><p>Troppen din</p></div>
+        <button class="primary" onclick="openPlayerModal()">+ Ny spiller</button>
+      </div>
+      <div class="card" style="padding:0;overflow-x:auto;">
+        <table id="players-table"></table>
+      </div>
+    </section>
+
+    <!-- ØKTER & KAMPER -->
+    <section class="view" id="view-okter">
+      <div class="view-header">
+        <div><h1>Økter &amp; kamper</h1><p>Registrer oppmøte</p></div>
+        <button class="primary" onclick="openSessionModal()">+ Ny økt/kamp</button>
+      </div>
+      <div id="sessions-list"></div>
+    </section>
+
+    <!-- VURDERING -->
+    <section class="view" id="view-vurdering">
+      <div class="view-header">
+        <div><h1>Vurdering</h1><p>Sett karakter på kvaliteter pr. spiller og økt</p></div>
+      </div>
+      <div class="card">
+        <div class="field"><label>Velg økt/kamp</label><select id="rate-session-select" onchange="renderRatingForm()"></select></div>
+      </div>
+      <div id="rating-form"></div>
+    </section>
+
+    <!-- TESTER -->
+    <section class="view" id="view-tester">
+      <div class="view-header">
+        <div><h1>Fysiske tester</h1><p>Spenst, hurtighet, skuddhastighet, utholdenhet m.m.</p></div>
+        <button class="primary" onclick="openTestModal()">+ Registrer test</button>
+      </div>
+      <div id="tests-list"></div>
+    </section>
+
+    <!-- ØKTPLAN -->
+    <section class="view" id="view-planer">
+      <div class="view-header">
+        <div><h1>Øktplan</h1><p>Huskeliste for kommende treninger</p></div>
+        <button class="primary" onclick="openPlanModal()">+ Ny økt-plan</button>
+      </div>
+      <div id="plans-list"></div>
+    </section>
+
+    <!-- OPPSTILLING -->
+    <section class="view" id="view-oppstilling">
+      <div class="view-header">
+        <div><h1>Oppstilling</h1><p>Sett opp laget</p></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="field"><label>Tittel</label><input type="text" id="lineup-title" placeholder="F.eks. Kamp mot Nord IL 14.9"></div>
+          <div class="field"><label>Formasjon</label>
+            <select id="lineup-formation" onchange="renderPitch()">
+              <option value="4-3-3">4-3-3</option>
+              <option value="4-4-2">4-4-2</option>
+              <option value="3-5-2">3-5-2</option>
+              <option value="4-2-3-1">4-2-3-1</option>
+              <option value="5-3-2">5-3-2</option>
+            </select>
+          </div>
+          <button class="primary" onclick="saveLineup()">Lagre oppstilling</button>
+          <div id="saved-lineups" style="margin-top:20px;"></div>
+        </div>
+        <div class="card">
+          <div class="pitch-wrap" id="pitch"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav id="bottomnav">
+  <button class="active" data-view="dashboard"><span class="ic">▦</span>Utvikling</button>
+  <button data-view="spillere"><span class="ic">⛁</span>Spillere</button>
+  <button data-view="okter"><span class="ic">◷</span>Økter</button>
+  <button data-view="vurdering"><span class="ic">★</span>Vurder</button>
+  <button data-view="tester"><span class="ic">↥</span>Tester</button>
+  <button data-view="planer"><span class="ic">☑</span>Plan</button>
+  <button data-view="oppstilling"><span class="ic">⚽</span>Lag</button>
+</nav>
+
+<div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal-content"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
