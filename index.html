@@ -5,54 +5,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Lagutvikling</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2D5F3F">
+<meta name="theme-color" content="#13241a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lagutvikling">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
 <style>
 :root{
-  --pitch:#2D5F3F;
-  --pitch-dark:#1E4530;
-  --fresh:#5FA85D;
-  --chalk:#F7F5F0;
-  --amber:#E8A33D;
-  --ink:#1A2419;
-  --muted:#7A8B7D;
-  --line-white:#E4E0D6;
-  --card:#FFFFFF;
-  --danger:#C1554B;
-  --radius:10px;
+  --bg:#13241a;
+  --bg-2:#0E1B14;
+  --surface:#1C3323;
+  --surface-2:#22402A;
+  --fresh:#7BC96F;
+  --amber:#F0A93E;
+  --text:#F3F1E6;
+  --muted:#93A896;
+  --border:#2C4A34;
+  --danger:#E2685C;
+  --radius:12px;
 }
 *{box-sizing:border-box;}
-body{margin:0;font-family:'Inter',sans-serif;background:var(--chalk);color:var(--ink);}
+body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
 h1,h2,h3,.num{font-family:'Oswald',sans-serif;}
 .num{font-variant-numeric:tabular-nums;}
 
 /* App shell */
 #app{display:flex;min-height:100vh;}
 nav#sidenav{
-  width:220px;background:var(--pitch-dark);color:var(--chalk);
+  width:220px;background:var(--bg-2);color:var(--text);
   padding:24px 0;flex-shrink:0;display:flex;flex-direction:column;
   position:sticky;top:0;height:100vh;overflow-y:auto;
 }
 nav#sidenav .brand{
   font-family:'Oswald',sans-serif;font-weight:700;font-size:22px;
-  padding:0 20px 24px 20px;letter-spacing:0.5px;color:var(--chalk);
-  border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:12px;
+  padding:0 20px 6px 20px;letter-spacing:0.5px;color:var(--text);
 }
-nav#sidenav .brand span{color:var(--fresh);}
+nav#sidenav .brand span{color:var(--amber);}
+nav#sidenav .version{padding:0 20px 20px 20px;font-size:11px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:12px;}
 nav#sidenav button.tab{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
-  background:none;border:none;color:rgba(247,245,240,0.75);
+  background:none;border:none;color:rgba(243,241,230,0.7);
   padding:12px 20px;font-family:'Inter',sans-serif;font-size:15px;font-weight:500;
   cursor:pointer;border-left:3px solid transparent;transition:background .15s;
 }
 nav#sidenav button.tab:hover{background:rgba(255,255,255,0.06);}
 nav#sidenav button.tab.active{
-  background:rgba(95,168,93,0.15);color:#fff;border-left-color:var(--fresh);
+  background:rgba(240,169,62,0.13);color:#fff;border-left-color:var(--amber);
 }
 nav#sidenav button.tab .ic{font-size:17px;width:20px;text-align:center;}
+nav#sidenav .nav-spacer{flex:1;}
+nav#sidenav .settings-link{margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;}
 
 .content-col{flex:1;min-width:0;display:flex;flex-direction:column;}
 main{flex:1;min-width:0;padding:32px 40px 100px 40px;max-width:1100px;}
@@ -63,19 +68,20 @@ main{flex:1;min-width:0;padding:32px 40px 100px 40px;max-width:1100px;}
 .view-header p{margin:4px 0 0 0;color:var(--muted);font-size:14px;}
 
 button.primary{
-  background:var(--pitch);color:#fff;border:none;padding:10px 18px;border-radius:var(--radius);
-  font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;
+  background:var(--amber);color:#1A1206;border:none;padding:10px 18px;border-radius:var(--radius);
+  font-family:'Inter',sans-serif;font-weight:700;font-size:14px;cursor:pointer;
 }
-button.primary:hover{background:var(--pitch-dark);}
+button.primary:hover{background:#FFBB55;}
 button.ghost{
-  background:none;border:1px solid var(--line-white);color:var(--ink);
+  background:none;border:1px solid var(--border);color:var(--text);
   padding:9px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;
 }
-button.ghost:hover{border-color:var(--pitch);}
+button.ghost:hover{border-color:var(--fresh);}
 button.icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 8px;}
 button.icon-btn:hover{color:var(--danger);}
+button.block{width:100%;margin-bottom:10px;}
 
-.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--line-white);padding:20px;margin-bottom:16px;}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:16px;}
 .grid{display:grid;gap:16px;}
 .grid.cols-2{grid-template-columns:1fr 1fr;}
 .grid.cols-3{grid-template-columns:repeat(3,1fr);}
@@ -83,57 +89,56 @@ button.icon-btn:hover{color:var(--danger);}
 @media(max-width:900px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}}
 
 table{width:100%;border-collapse:collapse;font-size:14px;}
-th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;text-transform:none;padding:8px 10px;border-bottom:2px solid var(--line-white);}
-td{padding:10px 10px;border-bottom:1px solid var(--line-white);}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:8px 10px;border-bottom:2px solid var(--border);}
+td{padding:10px 10px;border-bottom:1px solid var(--border);}
 tr:last-child td{border-bottom:none;}
 
 input[type=text],input[type=number],input[type=date],select,textarea{
-  width:100%;padding:9px 12px;border:1px solid var(--line-white);border-radius:8px;
-  font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--ink);
+  width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:14px;background:var(--surface-2);color:var(--text);
 }
 input:focus,select:focus,textarea:focus{outline:2px solid var(--fresh);outline-offset:1px;border-color:var(--fresh);}
 label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;}
 .field{margin-bottom:14px;}
 
-.stat-box{background:var(--card);border-radius:var(--radius);border:1px solid var(--line-white);padding:18px;}
-.stat-box .val{font-size:32px;font-weight:600;color:var(--pitch);}
+.stat-box{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:18px;}
+.stat-box .val{font-size:32px;font-weight:600;color:var(--amber);}
 .stat-box .lbl{font-size:13px;color:var(--muted);margin-top:2px;}
 
 .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
-.pill.trening{background:#E8F1E6;color:var(--pitch);}
-.pill.kamp{background:#FBEBDD;color:#A85F1E;}
+.pill.trening{background:rgba(123,201,111,0.15);color:var(--fresh);}
+.pill.kamp{background:rgba(240,169,62,0.15);color:var(--amber);}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
-.empty-state h3{color:var(--ink);margin-bottom:6px;}
+.empty-state h3{color:var(--text);margin-bottom:6px;}
 
 .modal-backdrop{
-  display:none;position:fixed;inset:0;background:rgba(26,36,25,0.5);
+  display:none;position:fixed;inset:0;background:rgba(10,16,12,0.6);
   align-items:center;justify-content:center;z-index:100;padding:20px;
 }
 .modal-backdrop.active{display:flex;}
-.modal{background:#fff;border-radius:14px;padding:28px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;}
 .modal h2{margin:0 0 18px 0;font-size:20px;}
 
 .star-rate{display:flex;gap:4px;}
-.star-rate button{background:none;border:none;font-size:22px;cursor:pointer;color:var(--line-white);padding:2px;}
+.star-rate button{background:none;border:none;font-size:22px;cursor:pointer;color:var(--border);padding:2px;}
 .star-rate button.on{color:var(--amber);}
 
-.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-white);}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
 .checklist-item:last-child{border-bottom:none;}
 .checklist-item input[type=checkbox]{width:18px;height:18px;flex-shrink:0;}
 .checklist-item span{flex:1;font-size:14px;}
 .checklist-item.done span{text-decoration:line-through;color:var(--muted);}
 
-.pitch-wrap{background:var(--pitch);border-radius:14px;padding:20px;position:relative;aspect-ratio:3/4;max-width:420px;margin:0 auto;
-  background-image:repeating-linear-gradient(180deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 40px, transparent 40px, transparent 80px);
+.pitch-wrap{background:linear-gradient(180deg,#1E4530,#173822);border-radius:14px;padding:20px;position:relative;aspect-ratio:3/4;max-width:420px;margin:0 auto;
+  background-image:repeating-linear-gradient(180deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 40px, transparent 40px, transparent 80px);
+  border:1px solid var(--border);
 }
-.pitch-wrap::before{content:'';position:absolute;left:50%;top:50%;width:70%;height:1px;background:rgba(255,255,255,0.3);transform:translate(-50%,-50%);}
-.pitch-wrap::after{content:'';position:absolute;left:50%;top:50%;width:70px;height:70px;border:1px solid rgba(255,255,255,0.3);border-radius:50%;transform:translate(-50%,-50%);}
-.pos-slot{
-  position:absolute;transform:translate(-50%,-50%);width:56px;text-align:center;
-}
-.pos-slot select{width:100%;font-size:11px;padding:4px 2px;border-radius:6px;background:rgba(255,255,255,0.92);}
-.pos-slot .tag{color:#fff;font-size:10px;font-weight:600;margin-bottom:2px;text-shadow:0 1px 2px rgba(0,0,0,0.4);}
+.pitch-wrap::before{content:'';position:absolute;left:50%;top:50%;width:70%;height:1px;background:rgba(255,255,255,0.25);transform:translate(-50%,-50%);}
+.pitch-wrap::after{content:'';position:absolute;left:50%;top:50%;width:70px;height:70px;border:1px solid rgba(255,255,255,0.25);border-radius:50%;transform:translate(-50%,-50%);}
+.pos-slot{position:absolute;transform:translate(-50%,-50%);width:56px;text-align:center;}
+.pos-slot select{width:100%;font-size:11px;padding:4px 2px;border-radius:6px;background:rgba(255,255,255,0.92);color:#1A2419;}
+.pos-slot .tag{color:#fff;font-size:10px;font-weight:600;margin-bottom:2px;text-shadow:0 1px 2px rgba(0,0,0,0.5);}
 
 nav#bottomnav{display:none;}
 @media(max-width:800px){
@@ -143,18 +148,19 @@ nav#bottomnav{display:none;}
   .content-col{height:100dvh;}
   main{flex:1;min-width:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px 24px 16px;}
   nav#bottomnav{
-    display:flex;flex-shrink:0;background:var(--pitch-dark);
+    display:flex;flex-shrink:0;background:var(--bg-2);border-top:1px solid var(--border);
     justify-content:space-around;padding:6px 0 max(6px,env(safe-area-inset-bottom)) 0;
+    overflow-x:auto;
   }
-  nav#bottomnav button{background:none;border:none;color:rgba(247,245,240,0.6);font-size:10px;
-    display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-family:'Inter';}
-  nav#bottomnav button.active{color:var(--fresh);}
+  nav#bottomnav button{background:none;border:none;color:rgba(243,241,230,0.55);font-size:10px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-family:'Inter';flex-shrink:0;min-width:52px;}
+  nav#bottomnav button.active{color:var(--amber);}
   nav#bottomnav button .ic{font-size:18px;}
   .grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}
 }
 .toast{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;padding:10px 20px;border-radius:30px;font-size:14px;
+  background:var(--surface-2);border:1px solid var(--border);color:#fff;padding:10px 20px;border-radius:30px;font-size:14px;
   opacity:0;transition:all .25s;pointer-events:none;z-index:200;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -162,6 +168,7 @@ nav#bottomnav{display:none;}
 select.player-picker{margin-bottom:16px;max-width:280px;}
 .small{font-size:12px;color:var(--muted);}
 .flex-between{display:flex;justify-content:space-between;align-items:center;}
+.hidden{display:none;}
 </style>
 </head>
 <body>
@@ -169,6 +176,7 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
 <div id="app">
   <nav id="sidenav">
     <div class="brand">Lag<span>utvikling</span></div>
+    <div class="version" id="version-label-side"></div>
     <button class="tab active" data-view="dashboard"><span class="ic">▦</span> Utvikling</button>
     <button class="tab" data-view="spillere"><span class="ic">⛁</span> Spillere</button>
     <button class="tab" data-view="okter"><span class="ic">◷</span> Økter &amp; kamper</button>
@@ -176,6 +184,8 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
     <button class="tab" data-view="tester"><span class="ic">↥</span> Fysiske tester</button>
     <button class="tab" data-view="planer"><span class="ic">☑</span> Øktplan</button>
     <button class="tab" data-view="oppstilling"><span class="ic">⚽</span> Oppstilling</button>
+    <div class="nav-spacer"></div>
+    <button class="tab settings-link" data-view="innstillinger"><span class="ic">⚙</span> Innstillinger</button>
   </nav>
 
   <div class="content-col">
@@ -277,6 +287,29 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
         </div>
       </div>
     </section>
+
+    <!-- INNSTILLINGER -->
+    <section class="view" id="view-innstillinger">
+      <div class="view-header">
+        <div><h1>Innstillinger</h1><p>Versjon, backup og oppdatering</p></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">App-versjon</h3>
+        <p class="small" id="version-label-main"></p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">Backup</h3>
+        <p class="small" style="margin-bottom:14px;">Alt lagres lokalt på denne enheten. Ta jevnlig backup, spesielt før du bytter telefon eller nettleser.</p>
+        <button class="ghost block" id="exportBtn">Eksporter alle data (backup)</button>
+        <button class="ghost block" id="importBtn">Importer backup</button>
+        <input type="file" id="importFile" accept=".json" class="hidden">
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">Oppdatering</h3>
+        <p class="small" style="margin-bottom:14px;">Appen lagrer alltid data lokalt i nettleseren, adskilt fra selve app-filene — en oppdatering eller "tving oppdatering" sletter aldri spillere, økter, vurderinger eller tester.</p>
+        <button class="ghost block" id="forceUpdateBtn">Tving oppdatering av appen</button>
+      </div>
+    </section>
   </main>
   <nav id="bottomnav">
     <button class="active" data-view="dashboard"><span class="ic">▦</span>Utvikling</button>
@@ -286,6 +319,7 @@ select.player-picker{margin-bottom:16px;max-width:280px;}
     <button data-view="tester"><span class="ic">↥</span>Tester</button>
     <button data-view="planer"><span class="ic">☑</span>Plan</button>
     <button data-view="oppstilling"><span class="ic">⚽</span>Lag</button>
+    <button data-view="innstillinger"><span class="ic">⚙</span>Mer</button>
   </nav>
   </div>
 </div>

@@ -1,4 +1,5 @@
 /* ===================== DATA LAYER ===================== */
+const APP_VERSION = '2026-09-01.1';
 const STORE_KEYS = ['players','sessions','ratings','tests','plans','lineups'];
 const DEFAULT_QUALITIES = ['Teknikk','Fysisk','Taktisk forståelse','Innstilling','Samarbeid'];
 const DEFAULT_TEST_TYPES = [
@@ -73,6 +74,7 @@ function switchView(v){
   if(v==='tester') renderTests();
   if(v==='planer') renderPlans();
   if(v==='oppstilling') renderLineupView();
+  if(v==='innstillinger') renderSettings();
 }
 document.querySelectorAll('#sidenav .tab, #bottomnav button').forEach(b=>{
   b.addEventListener('click', ()=>switchView(b.dataset.view));
@@ -510,6 +512,76 @@ function renderPlayerTestChart(){
     data:{ datasets },
     options:{ parsing:false, scales:{ x:{ type:'time', time:{unit:'month'}, ticks:{source:'auto'} } },
       plugins:{ legend:{ position:'bottom' } } }
+  });
+}
+
+/* ===================== INNSTILLINGER / BACKUP / OPPDATERING ===================== */
+function renderSettings(){
+  const label = `Versjon ${APP_VERSION}`;
+  document.getElementById('version-label-main').textContent = label;
+}
+function allDataKeys(){
+  return [...STORE_KEYS, 'testTypes', 'qualities'];
+}
+function exportAllData(){
+  const data = {};
+  allDataKeys().forEach(k=>{ data[k] = JSON.parse(localStorage.getItem('lu_'+k) || 'null'); });
+  data._version = APP_VERSION;
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `lagutvikling-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup lastet ned');
+}
+function importBackupFile(file){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      allDataKeys().forEach(k=>{
+        if(data[k] !== undefined && data[k] !== null){ localStorage.setItem('lu_'+k, JSON.stringify(data[k])); }
+      });
+      toast('Backup importert – laster på nytt …');
+      setTimeout(()=> window.location.reload(), 800);
+    }catch(err){
+      toast('Kunne ikke lese backup-filen');
+    }
+  };
+  reader.readAsText(file);
+}
+document.getElementById('exportBtn').addEventListener('click', exportAllData);
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e=>{
+  if(e.target.files[0]) importBackupFile(e.target.files[0]);
+});
+document.getElementById('forceUpdateBtn').addEventListener('click', async ()=>{
+  try{
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if('caches' in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+    toast('Oppdaterer …');
+    setTimeout(()=> window.location.reload(true), 400);
+  }catch(err){
+    toast('Fikk ikke tvunget oppdatering — prøv å lukke og åpne appen på nytt');
+  }
+});
+
+/* Show version in sidebar too */
+document.getElementById('version-label-side').textContent = 'v'+APP_VERSION;
+
+/* Register service worker for offline/PWA support.
+   Data lives in localStorage, completely separate from the SW cache,
+   so app updates never touch spillere/økter/vurderinger/tester. */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
 }
 
