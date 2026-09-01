@@ -488,7 +488,23 @@ function renderDashboard(){
     <div class="stat-box"><div class="val num">${upcomingPlans}</div><div class="lbl">Aktive øktplaner</div></div>
   `;
 
-  // Oppmøte chart
+  // Player picker is populated FIRST and independently of chart rendering below,
+  // so a chart error can never leave the dropdown empty.
+  const psel = document.getElementById('dash-player-select');
+  const prevValue = psel.value;
+  psel.innerHTML = players.map(p=>`<option value="${p.id}">${p.navn}</option>`).join('') || '<option value="">Ingen spillere ennå</option>';
+  if(players.some(p=>p.id===prevValue)){ psel.value = prevValue; }
+  psel.removeEventListener('change', renderPlayerCharts);
+  psel.addEventListener('change', renderPlayerCharts);
+
+  // Every chart below is wrapped so one failing chart can never block another,
+  // or block the player picker above from working.
+  try{ renderOppmoteChart(lastSessions); }catch(err){ console.error('Oppmøte-graf feilet', err); }
+  try{ renderPlayerCharts(); }catch(err){ console.error('Spiller-grafer feilet', err); }
+  try{ renderTeamQualityTrend(); }catch(err){ console.error('Lag-graf feilet', err); }
+}
+
+function renderOppmoteChart(lastSessions){
   const ordered = [...lastSessions].reverse();
   const ctx1 = document.getElementById('chart-oppmote');
   if(chartOppmote) chartOppmote.destroy();
@@ -500,17 +516,6 @@ function renderDashboard(){
       y:{ beginAtZero:true, ticks:{precision:0, color:CHART_MUTED}, grid:{color:CHART_GRID} },
       x:{ ticks:{color:CHART_MUTED}, grid:{display:false} } } }
   });
-
-  // Player picker drives radar + quality trend + test trend
-  const psel = document.getElementById('dash-player-select');
-  const prevValue = psel.value;
-  psel.innerHTML = players.map(p=>`<option value="${p.id}">${p.navn}</option>`).join('') || '<option value="">Ingen spillere ennå</option>';
-  if(players.some(p=>p.id===prevValue)){ psel.value = prevValue; }
-  psel.removeEventListener('change', renderPlayerCharts);
-  psel.addEventListener('change', renderPlayerCharts);
-  renderPlayerCharts();
-
-  renderTeamQualityTrend();
 }
 
 function qualityAverages(playerId){
@@ -532,9 +537,9 @@ function renderPlayerCharts(){
   document.getElementById('test-subtitle').textContent = pid
     ? `Fysiske testresultater for ${name} over tid.`
     : 'Velg en spiller over for å se testresultater.';
-  renderRadarChart(pid);
-  renderPlayerQualityTrend(pid);
-  renderPlayerTestChart(pid);
+  try{ renderRadarChart(pid); }catch(err){ console.error('Radar-graf feilet', err); }
+  try{ renderPlayerQualityTrend(pid); }catch(err){ console.error('Kvalitetsutvikling-graf feilet', err); }
+  try{ renderPlayerTestChart(pid); }catch(err){ console.error('Test-graf feilet', err); }
 }
 
 function renderRadarChart(pid){
